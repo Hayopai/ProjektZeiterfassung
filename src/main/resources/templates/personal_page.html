@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Arbeitszeit Erfassung</title>
+    <link rel="stylesheet" type="text/css" href="/css/main.css"/>
+</head>
+<body class="zeit">
+<div class="container">
+    <h2>Arbeitszeit Erfassung</h2>
+    <p><strong>Datum:</strong> <span id="currentDate"></span></p>
+    <div id="timerContainer">
+        <p>Arbeitszeit: <span id="arbeitszeit">00:00:00</span></p>
+        <p>Pausenzeit: <span id="pausenzeit">00:00:00</span></p>
+    </div>
+    <button onclick="startArbeit()">Arbeit starten :)</button>
+    <button onclick="startPause()">Pause starten</button>
+    <button onclick="endePause()">Pause beenden</button>
+    <button onclick="endeArbeit()">Feierabend!</button>
+</div>
+
+<script>
+    // Setzt das aktuelle Datum beim Laden der Seite
+    document.getElementById("currentDate").textContent = new Date().toLocaleDateString();
+
+    let arbeitszeitCounter = 0;
+    let pausenzeitCounter = 0;
+    let arbeitszeitTimer;
+    let pausenzeitTimer;
+
+    function startArbeit() {
+        clearInterval(pausenzeitTimer);
+        arbeitszeitTimer = startTimer("arbeitszeit", arbeitszeitCounter);
+    }
+
+    function endeArbeit() {
+        clearInterval(arbeitszeitTimer);
+        clearInterval(pausenzeitTimer);
+    }
+
+    function startPause() {
+        clearInterval(arbeitszeitTimer);
+        pausenzeitTimer = startTimer("pausenzeit", pausenzeitCounter);
+    }
+
+    function endePause() {
+        clearInterval(pausenzeitTimer);
+        arbeitszeitTimer = startTimer("arbeitszeit", arbeitszeitCounter);
+    }
+
+    function startTimer(elementId, counter) {
+        const element = document.getElementById(elementId);
+        return setInterval(() => {
+            counter++;
+            element.textContent = formatTime(counter);
+            if (elementId === "arbeitszeit") {
+                arbeitszeitCounter = counter;
+            } else {
+                pausenzeitCounter = counter;
+            }
+        }, 1000);
+    }
+
+    function formatTime(seconds) {
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+
+        return `${h}:${m}:${s}`;
+    }
+</script>
+</body>
+</html>
