@@ -5,46 +5,96 @@
     <link rel="stylesheet" type="text/css" href="/css/main.css"/>
 </head>
 <body class="zeit">
-<div class="container">
-    <h2>Arbeitszeit Erfassung</h2>
-    <p><strong>Datum:</strong> <span id="currentDate"></span></p>
+
+<div class="center-content">
+    <p id="dateDisplay" style="font-weight: bold;">Datum: </p>
+    <div id="buttonContainer">
+        <button id="arbeitButton" onclick="toggleArbeit()">Arbeit aufnehmen</button>
+        <button id="pauseButton" onclick="togglePause()">Pause starten</button>
+    </div>
     <div id="timerContainer">
         <p>Arbeitszeit: <span id="arbeitszeit">00:00:00</span></p>
         <p>Pausenzeit: <span id="pausenzeit">00:00:00</span></p>
     </div>
-    <button onclick="startArbeit()">Arbeit starten :)</button>
-    <button onclick="startPause()">Pause starten</button>
-    <button onclick="endePause()">Pause beenden</button>
-    <button onclick="endeArbeit()">Feierabend!</button>
+    <button id="resetButton" onclick="resetTimers()">Reset</button>
 </div>
 
 <script>
-    // Setzt das aktuelle Datum beim Laden der Seite
-    document.getElementById("currentDate").textContent = new Date().toLocaleDateString();
-
     let arbeitszeitCounter = 0;
     let pausenzeitCounter = 0;
     let arbeitszeitTimer;
     let pausenzeitTimer;
+    let inPause = false;
+    let inArbeit = false;
+
+    const currentDate = new Date();
+    const formattedDate = `Datum: ${currentDate.getDate().toString().padStart(2, '0')}.${(currentDate.getMonth() + 1).toString().padStart(2, '0')}.${currentDate.getFullYear()}`;
+    document.getElementById("dateDisplay").textContent = formattedDate;
+
+    function toggleArbeit() {
+        if (inPause) {
+            setArbeitButtonState(true, "Feierabend in einer Pause!?");
+            return;
+        }
+        if (inArbeit) {
+            endeArbeit();
+        } else {
+            startArbeit();
+        }
+    }
+
+    function setArbeitButtonState(isDisabled, titleText) {
+        const arbeitButton = document.getElementById("arbeitButton");
+        arbeitButton.disabled = isDisabled;
+        if (isDisabled && titleText) {
+            arbeitButton.title = titleText;
+        } else {
+            arbeitButton.removeAttribute('title');
+        }
+    }
 
     function startArbeit() {
         clearInterval(pausenzeitTimer);
         arbeitszeitTimer = startTimer("arbeitszeit", arbeitszeitCounter);
+        document.getElementById("arbeitButton").textContent = "Feierabend!";
+        inArbeit = true;
+        setPauseButtonState(false);
+        setResetButtonState(true);
+        setArbeitButtonState(false);
     }
 
     function endeArbeit() {
         clearInterval(arbeitszeitTimer);
-        clearInterval(pausenzeitTimer);
+        document.getElementById("arbeitButton").textContent = "Arbeit aufnehmen";
+        inArbeit = false;
+        setPauseButtonState(true);
+        setResetButtonState(false);
+        setArbeitButtonState(false);
+    }
+
+    function togglePause() {
+        if (inPause) {
+            endePause();
+        } else {
+            startPause();
+        }
     }
 
     function startPause() {
         clearInterval(arbeitszeitTimer);
         pausenzeitTimer = startTimer("pausenzeit", pausenzeitCounter);
+        document.getElementById("pauseButton").textContent = "Pause beenden";
+        inPause = true;
+        setResetButtonState(true);
+        setArbeitButtonState(true, "Feierabend machen innerhalb einer Pause ist nicht zulässig.");
     }
 
     function endePause() {
         clearInterval(pausenzeitTimer);
         arbeitszeitTimer = startTimer("arbeitszeit", arbeitszeitCounter);
+        document.getElementById("pauseButton").textContent = "Pause starten";
+        inPause = false;
+        setArbeitButtonState(false);
     }
 
     function startTimer(elementId, counter) {
@@ -67,6 +117,40 @@
 
         return `${h}:${m}:${s}`;
     }
+
+    function resetTimers() {
+        arbeitszeitCounter = 0;
+        pausenzeitCounter = 0;
+        document.getElementById("arbeitszeit").textContent = "00:00:00";
+        document.getElementById("pausenzeit").textContent = "00:00:00";
+        clearInterval(arbeitszeitTimer);
+        clearInterval(pausenzeitTimer);
+        arbeitszeitTimer = null;
+        pausenzeitTimer = null;
+        setPauseButtonState(false);
+        setResetButtonState(false);
+    }
+
+    function setPauseButtonState(isDisabled) {
+        const pauseButton = document.getElementById("pauseButton");
+        pauseButton.disabled = isDisabled;
+        if (isDisabled) {
+            pauseButton.title = "Sie haben Feierabend! Pausen sind dort nicht möglich... Wenn Sie Pausen machen wollen, dann müssen Sie wieder anfangen zu Arbeiten!";
+        } else {
+            pauseButton.removeAttribute('title');
+        }
+    }
+
+    function setResetButtonState(isDisabled) {
+        const resetButton = document.getElementById("resetButton");
+        resetButton.disabled = isDisabled;
+        if (isDisabled) {
+            resetButton.title = "Arbeitszeiterfassung läuft... Reset ist erst nach Beendigung möglich.";
+        } else {
+            resetButton.removeAttribute('title');
+        }
+    }
 </script>
+
 </body>
 </html>
